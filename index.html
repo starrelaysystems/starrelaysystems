@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Relay Systems</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14202B; --paper:#EDE7D8; --paper-2:#E2DAC4; --line:#C9BFA0;
+    --signal:#C4622D; --signal-dark:#9C4B21; --muted:#5B6B74; --white:#FBF9F2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Work Sans',sans-serif; background:var(--paper); color:var(--ink); line-height:1.55;}
+  h1,h2,h3,.serif{font-family:'Spectral',serif;}
+  a{color:inherit;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 32px;}
+
+  header{position:sticky; top:0; z-index:10; border-bottom:1px solid var(--line); padding:14px 0; background:var(--paper);}
+  header .wrap{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;}
+  .logo-plate{background:var(--ink); border-radius:8px; padding:8px 16px; display:flex; align-items:center;}
+  .logo-plate img{height:34px; width:auto; display:block;}
+  nav{display:flex; align-items:center; gap:26px; font-size:14px;}
+  nav a{text-decoration:none; border-bottom:1px solid transparent;}
+  nav a:hover{border-bottom-color:var(--signal);}
+  .nav-cta{background:var(--signal); color:var(--white) !important; padding:9px 18px; border-radius:5px; font-weight:600; border-bottom:none !important;}
+  .nav-cta:hover{background:var(--signal-dark);}
+
+  .hero{padding:64px 0 56px; border-bottom:1px solid var(--line);}
+  .hero-grid{display:grid; grid-template-columns:1.15fr 0.85fr; gap:50px; align-items:center;}
+  .hero h1{font-size:42px; line-height:1.15; margin:0 0 18px; font-weight:600; max-width:11ch;}
+  .hero p.lead{font-size:16.5px; color:var(--muted); max-width:46ch; margin:0 0 26px;}
+  .hero .tag-line{font-size:13px; color:var(--signal-dark); font-weight:600; margin-bottom:14px; text-transform:uppercase; letter-spacing:0.04em;}
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn-solid{background:var(--signal); color:var(--white); padding:12px 22px; border-radius:5px; font-weight:600; font-size:14px; text-decoration:none; display:inline-block;}
+  .btn-solid:hover{background:var(--signal-dark);}
+  .btn-ghost{border:1px solid var(--ink); padding:11px 20px; border-radius:5px; font-weight:600; font-size:14px; text-decoration:none; display:inline-block;}
+  .btn-ghost:hover{background:var(--ink); color:var(--white);}
+
+  .route-svg{width:100%; height:auto;}
+
+  section{padding:56px 0;}
+  section.tinted{background:var(--paper-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  h2.section-title{font-size:26px; font-weight:600; margin:0 0 12px; max-width:22ch;}
+  p.section-sub{color:var(--muted); max-width:56ch; margin:0 0 40px; font-size:15px;}
+
+  .problem-grid{display:grid; grid-template-columns:1fr 1fr; gap:40px;}
+  .problem-grid p{font-size:15px; max-width:48ch;}
+
+  .product-block{padding:40px 0; border-top:1px solid var(--line);}
+  .product-block:last-child{border-bottom:1px solid var(--line);}
+  .product-block-head{display:flex; align-items:center; gap:16px; margin-bottom:22px;}
+  .product-stop{
+    font-family:'Spectral',serif; font-size:15px; font-weight:600; color:var(--signal-dark);
+    border:1px solid var(--signal-dark); border-radius:50%; width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .product-block h3{font-size:22px; margin:0;}
+  .product-block .tagline{color:var(--muted); font-size:14px; margin:2px 0 0;}
+
+  .product-body{display:grid; grid-template-columns:280px 1fr 240px; gap:28px; align-items:start;}
+  .product-body ul{margin:0 0 18px; padding-left:18px; font-size:14px;}
+  .product-body li{margin-bottom:6px;}
+  .demo-link{
+    display:inline-block; font-size:13.5px; font-weight:600; color:var(--signal-dark);
+    border-bottom:1px solid var(--signal-dark); text-decoration:none; padding-bottom:1px;
+  }
+  .value-box{background:var(--white); border:1px solid var(--line); border-radius:4px; padding:18px 20px;}
+  .value-box .amount{font-family:'Spectral',serif; font-size:26px; font-weight:700; color:var(--signal-dark); line-height:1;}
+  .value-box .amount .per{font-size:13px; font-weight:400; color:var(--muted);}
+  .value-box .seats{font-size:12.5px; color:var(--ink); margin-top:10px; font-weight:600;}
+  .value-box .addon{font-size:12px; color:var(--muted); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); line-height:1.5;}
+  .value-box .btn-subscribe{
+    display:block; text-align:center; background:var(--signal); color:var(--white);
+    padding:10px 14px; border-radius:5px; font-weight:600; font-size:13px;
+    text-decoration:none; margin-top:14px;
+  }
+  .value-box .btn-subscribe:hover{background:var(--signal-dark);}
+  .value-box .btn-bypass{
+    display:block; text-align:center; font-size:11.5px; color:var(--muted);
+    text-decoration:underline; margin-top:8px;
+  }
+  .value-box .btn-bypass:hover{color:var(--ink);}
+
+  /* Mockup previews — illustrative, styled to match each product's real look */
+  .mockup{
+    border-radius:8px; overflow:hidden; border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(20,32,43,0.08);
+  }
+  .mockup-bar{height:26px; display:flex; align-items:center; gap:5px; padding:0 10px;}
+  .mockup-bar .dot{width:7px; height:7px; border-radius:50%;}
+  .mockup-body{padding:12px; font-family:'Work Sans',sans-serif;}
+
+  .mock-pipeline .mockup-bar{background:#1C2333;}
+  .mock-pipeline .mockup-bar .dot{background:#4C6B8A;}
+  .mock-pipeline .mockup-body{background:#F7F7F4;}
+  .mock-pipeline .mcard{background:#fff; border:1px solid #E3E1DB; border-radius:4px; padding:7px 8px; margin-bottom:6px; font-size:10.5px;}
+  .mock-pipeline .mtag{display:inline-block; font-size:8.5px; font-weight:700; padding:1px 5px; border-radius:8px; background:#FCE7DD; color:#E0592F; margin-top:3px;}
+
+  .mock-suite .mockup-bar{background:#1B1A16;}
+  .mock-suite .mockup-bar .dot{background:#C0964B;}
+  .mock-suite .mockup-body{background:#121210; display:flex; gap:8px;}
+  .mock-suite .msidebar{width:34%; background:#1B1A16; border-radius:3px; padding:6px;}
+  .mock-suite .msidebar .mline{height:5px; background:#34322A; border-radius:2px; margin-bottom:5px;}
+  .mock-suite .msidebar .mgold{height:12px; width:60%; background:#C0964B; border-radius:2px; margin-bottom:8px;}
+  .mock-suite .mcol{flex:1; background:#1B1A16; border-radius:3px; padding:5px;}
+  .mock-suite .mcard{background:#242219; border-top:2px solid #C15A44; border-radius:3px; padding:5px; margin-bottom:5px; font-size:8px; color:#EDE8DC;}
+
+  .mock-meridian .mockup-bar{background:#FFFFFF; border-bottom:1px solid #E2DCCB;}
+  .mock-meridian .mockup-bar .dot{background:#2F5233;}
+  .mock-meridian .mockup-body{background:#FAF7F0;}
+  .mock-meridian .mstats{display:flex; gap:5px; margin-bottom:8px;}
+  .mock-meridian .mstat{flex:1; background:#fff; border:1px solid #E2DCCB; border-radius:3px; padding:6px; text-align:center;}
+  .mock-meridian .mstat .n{font-family:'Spectral',serif; font-weight:700; color:#1F3A23; font-size:13px;}
+  .mock-meridian .mstat .l{font-size:6.5px; color:#8A8370;}
+  .mock-meridian .mbars{display:flex; align-items:flex-end; gap:4px; height:34px; background:#fff; border:1px solid #E2DCCB; border-radius:3px; padding:4px;}
+  .mock-meridian .mbars div{flex:1; background:#2F5233; border-radius:2px 2px 0 0;}
+
+  .compare-table{width:100%; border-collapse:collapse; font-size:14px; margin-top:10px;}
+  .compare-table th, .compare-table td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line);}
+  .compare-table th{font-weight:600; color:var(--muted); font-size:12.5px;}
+  .compare-table td.num{color:var(--signal-dark); font-weight:600;}
+  .compare-note{font-size:12.5px; color:var(--muted); margin-top:14px; max-width:60ch;}
+
+  footer{padding:40px 0; border-top:1px solid var(--line);}
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; font-size:13px; color:var(--muted);}
+  .status-note{
+    background:var(--white); border:1px solid var(--line); border-radius:4px;
+    padding:14px 18px; font-size:13px; color:var(--muted); margin-top:40px;
+  }
+
+  @media (max-width:820px){
+    .hero-grid{grid-template-columns:1fr;}
+    .problem-grid{grid-template-columns:1fr;}
+    .product-body{grid-template-columns:1fr;}
+    .hero h1{font-size:32px; max-width:none;}
+    nav{gap:16px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo-plate"><img src="assets/logo.png" alt="Star Relay Systems"></div>
+    <nav>
+      <a href="#products">Products</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#demos">Demos</a>
+      <a href="lead-suite.html" class="nav-cta">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="tag-line">Connecting businesses to their next customer</div>
+      <h1>CRM systems built for how small teams actually sell</h1>
+      <p class="lead">We build lead-tracking and team CRM systems for small South African businesses — estate agencies, contractors, and service teams currently running their pipeline through WhatsApp and a notebook. One flat price per business, not a per-seat bill that grows every time you hire.</p>
+      <div class="hero-ctas">
+        <a href="#products" class="btn-solid">See the three tiers</a>
+        <a href="#pricing" class="btn-ghost">View pricing</a>
+      </div>
+    </div>
+    <svg class="route-svg" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+      <line x1="30" y1="160" x2="90" y2="100" stroke="#C9BFA0" stroke-width="2"/>
+      <line x1="90" y1="100" x2="180" y2="120" stroke="#C9BFA0" stroke-width="2"/>
+      <line x1="180" y1="120" x2="300" y2="45" stroke="#C9BFA0" stroke-width="2"/>
+      <circle cx="30" cy="160" r="7" fill="#EDE7D8" stroke="#9C4B21" stroke-width="2"/>
+      <circle cx="90" cy="100" r="7" fill="#EDE7D8" stroke="#9C4B21" stroke-width="2"/>
+      <circle cx="180" cy="120" r="9" fill="#C4622D"/>
+      <circle cx="300" cy="45" r="11" fill="#9C4B21"/>
+      <text x="15" y="182" font-family="Work Sans" font-size="11" fill="#5B6B74">Spreadsheet</text>
+      <text x="60" y="88" font-family="Spectral" font-size="12" fill="#14202B" font-weight="600">Lead Pipeline</text>
+      <text x="150" y="140" font-family="Spectral" font-size="12" fill="#14202B" font-weight="600">Lead Suite</text>
+      <text x="264" y="30" font-family="Spectral" font-size="12" fill="#14202B" font-weight="600">Meridian</text>
+    </svg>
+  </div>
+</section>
+
+<section class="tinted">
+  <div class="wrap">
+    <h2 class="section-title">The problem isn't your team. It's the tools they're stuck with.</h2>
+    <div class="problem-grid">
+      <p>Most small businesses we talk to are running leads through a mix of WhatsApp, memory, and a spreadsheet someone stopped updating months ago. Nothing is lost on purpose — it just falls through a system that was never built to hold it.</p>
+      <p>Enterprise CRMs solve this but charge per seat, which turns hiring into a tax. We build the same core discipline — a pipeline, roles, and follow-up tracking — priced flat per business, so your bill doesn't change the day you bring on a fourth agent.</p>
+    </div>
+  </div>
+</section>
+
+<section id="products">
+  <div class="wrap">
+    <h2 class="section-title">Three tiers, one route</h2>
+    <p class="section-sub">Each tier is a genuinely different tool, not the same board with a new coat of paint — the features grow with the size of team using it.</p>
+
+    <div class="product-block">
+      <div class="product-block-head">
+        <div class="product-stop">1</div>
+        <div><h3>Lead Pipeline</h3><p class="tagline">For the solo owner replacing a spreadsheet</p></div>
+      </div>
+      <div class="product-body">
+        <div class="mockup mock-pipeline">
+          <div class="mockup-bar"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="mockup-body">
+            <div class="mcard">Nomvula Estates<br><span class="mtag">hot</span></div>
+            <div class="mcard">R & J Properties</div>
+          </div>
+        </div>
+        <div>
+          <ul>
+            <li>Single-user login</li>
+            <li>Kanban lead board with hot/warm/cold scoring</li>
+            <li>Open pipeline value at a glance</li>
+          </ul>
+          <a class="demo-link" href="lead-pipeline.html">Open the demo →</a>
+        </div>
+        <div class="value-box">
+          <div class="amount">R499<span class="per">/mo</span></div>
+          <div class="seats">1 user</div>
+          <a class="btn-subscribe" href="#" onclick="showSubscribeNotice(event,'Lead Pipeline')">Subscribe</a>
+          <a class="btn-bypass" href="lead-pipeline.html?preview=1">Skip payment (preview access)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-block">
+      <div class="product-block-head">
+        <div class="product-stop">2</div>
+        <div><h3>Lead Suite</h3><p class="tagline">For a small team that needs roles, not just a list</p></div>
+      </div>
+      <div class="product-body">
+        <div class="mockup mock-suite">
+          <div class="mockup-bar"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="mockup-body">
+            <div class="msidebar"><div class="mgold"></div><div class="mline"></div><div class="mline" style="width:70%;"></div><div class="mline" style="width:50%;"></div></div>
+            <div class="mcol"><div class="mcard">Thabo M.</div><div class="mcard">Naledi D.</div></div>
+          </div>
+        </div>
+        <div>
+          <ul>
+            <li>Up to 11 seats: creator, admin, team leads, agents</li>
+            <li>Admin Portal with roster, permissions, and CSV export</li>
+            <li>Personal profile with photo and assigned leads</li>
+            <li>Light and dark mode</li>
+          </ul>
+          <a class="demo-link" href="lead-suite.html">Open the demo →</a>
+        </div>
+        <div class="value-box">
+          <div class="amount">R2,799<span class="per">/mo</span></div>
+          <div class="seats">Up to 11 seats, flat</div>
+          <div class="addon">Need a few more logins? +5 seats for +R300/mo, up to 21 seats total.</div>
+          <a class="btn-subscribe" href="#" onclick="showSubscribeNotice(event,'Lead Suite')">Subscribe</a>
+          <a class="btn-bypass" href="lead-suite.html?preview=1">Skip payment (preview access)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-block">
+      <div class="product-block-head">
+        <div class="product-stop">3</div>
+        <div><h3>Meridian</h3><p class="tagline">For a business ready to see the shape of its pipeline</p></div>
+      </div>
+      <div class="product-body">
+        <div class="mockup mock-meridian">
+          <div class="mockup-bar"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="mockup-body">
+            <div class="mstats">
+              <div class="mstat"><div class="n">R84k</div><div class="l">PIPELINE</div></div>
+              <div class="mstat"><div class="n">12</div><div class="l">ACTIVE</div></div>
+            </div>
+            <div class="mbars">
+              <div style="height:40%;"></div><div style="height:70%;"></div><div style="height:55%;"></div><div style="height:90%;"></div><div style="height:30%;"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <ul>
+            <li>Up to 25 seats, expandable</li>
+            <li>Analytics dashboard and follow-up calendar</li>
+            <li>Everything in Lead Suite, plus Creator-only site settings</li>
+          </ul>
+          <a class="demo-link" href="meridian.html">Open the demo →</a>
+        </div>
+        <div class="value-box">
+          <div class="amount">R6,499<span class="per">/mo</span></div>
+          <div class="seats">Up to 25 seats, flat</div>
+          <a class="btn-subscribe" href="#" onclick="showSubscribeNotice(event,'Meridian')">Subscribe</a>
+          <a class="btn-bypass" href="meridian.html?preview=1">Skip payment (preview access)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tinted" id="pricing">
+  <div class="wrap">
+    <h2 class="section-title">Where these numbers come from</h2>
+    <p class="section-sub">South African CRM pricing, current market, for context.</p>
+    <table class="compare-table">
+      <tr><th>Platform</th><th>Typical SA price</th><th>Billing model</th></tr>
+      <tr><td>Everline CRM</td><td class="num">~R280/user/mo</td><td>Per seat, USD</td></tr>
+      <tr><td>Fieldstone Smart CRM</td><td class="num">R499 – R599/mo</td><td>ZAR, SA-built</td></tr>
+      <tr><td>Vantage CRM</td><td class="num">R270+/mo</td><td>Per seat, USD</td></tr>
+      <tr><td>Northgate / Orbital 365</td><td class="num">R1,200 – R1,800/seat/mo</td><td>Per seat, USD</td></tr>
+    </table>
+    <p class="compare-note">Most competitors charge per seat, so their real cost for a team scales with headcount. Our three tiers are priced flat per business — Lead Suite's 11 seats would cost roughly R6,050/month on a per-seat basis at Fieldstone's rate; Meridian's 25 seats would run R30,000+/month on enterprise per-seat platforms.</p>
+  </div>
+</section>
+
+<footer id="demos">
+  <div class="wrap">
+    <div>Star Relay Systems — CRM & automation systems for South African small businesses.</div>
+    <div>Demos: <a href="lead-pipeline.html">Lead Pipeline</a> · <a href="lead-suite.html">Lead Suite</a> · <a href="meridian.html">Meridian</a> · <a href="admin.html" style="opacity:0.55;">Admin</a></div>
+  </div>
+  <div class="wrap">
+    <div class="status-note">This is a working demo site — pricing, copy, and features are still being finalized before anything goes live.</div>
+  </div>
+</footer>
+
+<script>
+  // Placeholder until PayFast is connected. Replace the alert below with a real
+  // redirect to your PayFast payment link / checkout page once it's live, e.g.:
+  //   window.location.href = "https://www.payfast.co.za/eng/process?...";
+  function showSubscribeNotice(e, tierName){
+    e.preventDefault();
+    alert(
+      tierName + ": online payment is being set up (PayFast). " +
+      "In the meantime, use the \"Skip payment (preview access)\" link below to try the product, " +
+      "or contact us directly to get started."
+    );
+  }
+</script>
+</body>
+</html>

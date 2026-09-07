@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Admin — Star Relay Systems</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14202B; --paper:#EDE7D8; --paper-2:#E2DAC4; --line:#C9BFA0;
+    --signal:#C4622D; --signal-dark:#9C4B21; --muted:#5B6B74; --white:#FBF9F2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Work Sans',sans-serif; background:var(--paper); color:var(--ink); line-height:1.55;
+       min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  h1,.serif{font-family:'Spectral',serif;}
+
+  .box{background:var(--white); border:1px solid var(--line); border-radius:8px; padding:36px; width:100%; max-width:380px;}
+  .box h1{font-size:22px; margin:0 0 4px;}
+  .box p.sub{font-size:12.5px; color:var(--muted); margin:0 0 24px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; color:var(--muted);}
+  .field input{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px; font-size:14px; font-family:inherit;}
+  .error{color:var(--signal-dark); font-size:12.5px; margin:-6px 0 12px; display:none;}
+  button.primary{width:100%; background:var(--signal); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:600; font-size:14px; cursor:pointer;}
+  button.primary:hover{background:var(--signal-dark);}
+
+  #launcher{display:none;}
+  #launcher.visible{display:block;}
+  .launcher-links{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+  .launcher-links a{
+    display:block; text-align:center; border:1px solid var(--ink); border-radius:6px;
+    padding:12px; font-weight:600; font-size:14px; text-decoration:none; color:var(--ink);
+  }
+  .launcher-links a:hover{background:var(--ink); color:var(--white);}
+  .signout{display:block; text-align:center; font-size:12px; color:var(--muted); margin-top:18px; cursor:pointer; text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="box" id="login-box">
+  <h1>Site Admin</h1>
+  <p class="sub">Star Relay Systems — internal login. Not for customers.</p>
+  <div class="field"><label>Email</label><input id="login-email" type="text" placeholder="you@starrelaysystems.co.za"></div>
+  <div class="field"><label>Password</label><input id="login-password" type="password" placeholder="••••••••"></div>
+  <div class="error" id="login-error"></div>
+  <button class="primary" id="login-submit">Log in</button>
+</div>
+
+<div class="box" id="launcher">
+  <h1>Welcome back</h1>
+  <p class="sub" id="launcher-sub">Choose a product to manage.</p>
+  <div class="launcher-links">
+    <a href="lead-pipeline.html">Enter Lead Pipeline →</a>
+    <a href="lead-suite.html">Enter Lead Suite →</a>
+    <a href="meridian.html">Enter Meridian →</a>
+  </div>
+  <div class="signout" id="signout-link">Log out</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  // Same shared Supabase project as the three product pages, so this session
+  // carries over automatically when you click through to one of them.
+  const SUPABASE_URL = 'https://pzaawnnpyxcdzwyxpgey.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_nWKYW7__UxLfJPH-iVHEuQ_t-Xdeee8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const byId = id => document.getElementById(id);
+
+  async function checkExistingSession(){
+    const { data: { session } } = await sb.auth.getSession();
+    if(session) await afterLogin();
+  }
+
+  async function afterLogin(){
+    const { data: authUser } = await sb.auth.getUser();
+    if(!authUser?.user) return;
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', authUser.user.id).single();
+    if(!profile || !profile.is_site_admin){
+      const errEl = byId('login-error');
+      errEl.textContent = "This account isn't flagged as a site admin.";
+      errEl.style.display = 'block';
+      await sb.auth.signOut();
+      return;
+    }
+    byId('login-box').style.display = 'none';
+    byId('launcher').classList.add('visible');
+    byId('launcher-sub').textContent = `Logged in as ${profile.name || profile.email}. Choose a product to manage.`;
+  }
+
+  byId('login-submit').addEventListener('click', async () => {
+    const email = byId('login-email').value.trim();
+    const password = byId('login-password').value;
+    const errEl = byId('login-error');
+    errEl.style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){ errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+    await afterLogin();
+  });
+
+  byId('signout-link').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    byId('launcher').classList.remove('visible');
+    byId('login-box').style.display = 'block';
+  });
+
+  checkExistingSession();
+</script>
+</body>
+</html>

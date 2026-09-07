@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF7F0; --surface:#FFFFFF; --surface-2:#F1ECE0; --border:#E2DCCB;
+    --text:#2B2A25; --muted:#8A8370; --emerald:var(--accent-override, #2F5233); --emerald-dark:#1F3A23;
+    --hot:#9C3B2E; --hot-bg:#F5E4DF; --warm:#B07C22; --warm-bg:#F6ECD9;
+    --cold:#3E6478; --cold-bg:#E3EEF2; --won:#2F5233; --won-bg:#E1EAE1;
+    --creator:#6E4FB0; --creator-bg:#EAE2F7;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);}
+  .serif{font-family:'Cormorant Garamond',serif;}
+
+  #auth-screen{position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:50;}
+  .login-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:36px; width:100%; max-width:340px;}
+  .login-box h1{font-size:26px; margin:0 0 4px; color:var(--emerald-dark); font-family:'Cormorant Garamond',serif;}
+  .login-box p.sub{font-size:12.5px; color:var(--muted); margin:0 0 24px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:6px;}
+  .field input, .field select{width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:6px; font-size:13.5px; font-family:inherit;}
+  .error{color:var(--hot); font-size:12.5px; margin:-6px 0 12px;}
+  .login-box button{width:100%; background:var(--emerald); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:700; font-size:13.5px; cursor:pointer; margin-top:6px;}
+  .switch-link{font-size:12px; color:var(--muted); margin-top:16px; text-align:center;}
+  .switch-link a{color:var(--emerald-dark); cursor:pointer; text-decoration:underline;}
+
+  #app{display:none;}
+  #app.visible{display:block;}
+
+  header{background:var(--surface); border-bottom:1px solid var(--border); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;}
+  .brand h1{font-size:24px; margin:0; font-weight:700; color:var(--emerald-dark); font-family:'Cormorant Garamond',serif;}
+  .brand p{font-size:11.5px; color:var(--muted); margin:2px 0 0; font-style:italic;}
+  .tabs{display:flex; gap:4px; background:var(--surface-2); padding:4px; border-radius:8px; flex-wrap:wrap;}
+  .tab{padding:8px 14px; font-size:12px; font-weight:600; color:var(--muted); border-radius:6px; cursor:pointer; border:none; background:none;}
+  .tab.active{background:var(--surface); color:var(--emerald-dark); box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  .header-right{display:flex; align-items:center; gap:10px;}
+  input.search{border:1px solid var(--border); background:var(--surface); padding:8px 12px; border-radius:6px; font-size:12.5px; width:160px; font-family:inherit; color:var(--text);}
+  .btn-primary{background:var(--emerald); color:#fff; border:none; padding:9px 16px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer;}
+  .btn-icon{background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:6px; font-size:12px; cursor:pointer;}
+  .user-chip{display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer;}
+  .avatar{width:28px; height:28px; border-radius:50%; background:var(--emerald); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; overflow:hidden; flex-shrink:0;}
+  .avatar img{width:100%; height:100%; object-fit:cover;}
+  .role-badge{font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; padding:2px 6px; border-radius:9px;}
+  .role-badge.admin{background:var(--hot-bg); color:var(--hot);}
+  .role-badge.mid{background:var(--warm-bg); color:var(--warm);}
+  .role-badge.agent{background:var(--cold-bg); color:var(--cold);}
+  .role-badge.creator{background:var(--creator-bg); color:var(--creator);}
+
+  main{padding:28px 32px 60px; max-width:1400px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:18px; margin-bottom:26px;}
+  .stat{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px;}
+  .stat .num{font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--emerald-dark); line-height:1;}
+  .stat .lbl{font-size:11.5px; color:var(--muted); margin-top:5px;}
+
+  .board{display:grid; grid-template-columns:repeat(5,minmax(200px,1fr)); gap:14px; overflow-x:auto;}
+  .column{background:var(--surface-2); border-radius:10px; padding:12px; min-height:160px;}
+  .column h3{font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:700; margin:2px 4px 12px; display:flex; justify-content:space-between;}
+  .column h3 .count{color:var(--text);}
+  .lead-card{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; cursor:grab;}
+  .lead-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+  .card-top{display:flex; align-items:center; gap:9px; margin-bottom:9px;}
+  .card-top .name{font-weight:600; font-size:13px;}
+  .card-top .contact{font-size:11px; color:var(--muted);}
+  .card-bottom{display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;}
+  .value{font-family:'Cormorant Garamond',serif; font-weight:700; font-size:15px; color:var(--emerald-dark);}
+  .assignee{font-size:10px; color:var(--muted);}
+  .tag{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;}
+  .tag.hot{background:var(--hot-bg); color:var(--hot);}
+  .tag.warm{background:var(--warm-bg); color:var(--warm);}
+  .tag.cold{background:var(--cold-bg); color:var(--cold);}
+  .empty-col{font-size:11.5px; color:var(--muted); text-align:center; padding:20px 6px; border:1px dashed var(--border); border-radius:8px;}
+  .column.dragover{background:var(--border);}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th, td{text-align:left; padding:8px 9px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;}
+  .small-btn{background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:5px 9px; border-radius:5px; font-size:11px; cursor:pointer; margin-right:5px;}
+  .small-btn.danger{color:var(--hot); border-color:var(--hot);}
+  .role-select{padding:5px 8px; border-radius:5px; border:1px solid var(--border); font-size:11.5px;}
+  .panel-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:22px; margin-bottom:22px;}
+  .panel-box h3{font-size:16px; margin:0 0 16px; color:var(--emerald-dark); font-family:'Cormorant Garamond',serif;}
+  .add-user-row{display:grid; grid-template-columns:1.5fr 1.5fr 1fr auto; gap:9px; align-items:end;}
+  .locked-note{font-size:11px; color:var(--muted); margin:-8px 0 12px;}
+  .profile-avatar-lg{width:80px; height:80px; border-radius:50%; background:var(--emerald); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:26px; overflow:hidden; flex-shrink:0;}
+  .profile-avatar-lg img{width:100%; height:100%; object-fit:cover;}
+  .avatar-upload-btn{font-size:12px; color:var(--emerald-dark); cursor:pointer; text-decoration:underline; margin-top:6px; display:inline-block;}
+  .my-leads-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:12.5px;}
+  .section-label{font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:0.06em; margin:16px 0 6px;}
+  .perm-list{display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12.5px;}
+  .perm-list .yes{color:var(--emerald-dark);} .perm-list .no{color:var(--hot);}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .toggle-row:last-child{border-bottom:none;}
+
+  .overlay{display:none; position:fixed; inset:0; background:rgba(43,42,37,0.45); align-items:center; justify-content:center; padding:20px; z-index:20;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--surface); border-radius:10px; padding:26px; width:100%; max-width:420px; max-height:88vh; overflow-y:auto;}
+  .modal h2{margin:0 0 18px; font-size:20px; font-family:'Cormorant Garamond',serif;}
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .modal-actions button{flex:1; padding:10px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; border:none;}
+  .btn-cancel{background:var(--surface-2); color:var(--text);}
+  .btn-save{background:var(--emerald); color:#fff;}
+  .btn-danger{background:var(--hot); color:#fff;}
+  .kv{margin-bottom:8px;} .kv .k{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;} .kv .v{font-size:13px;}
+  .user-detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px;}
+
+  @media (max-width:900px){ .board{grid-template-columns:1fr;} .perm-list{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="login-box" id="login-panel">
+    <h1>Meridian</h1>
+    <p class="sub">A clear view of every deal, from first contact to close.</p>
+    <div class="field"><label>Email</label><input id="login-email" type="text" placeholder="you@business.com"></div>
+    <div class="field"><label>Password</label><input id="login-password" type="password" placeholder="••••••••"></div>
+    <div class="error" id="login-error" style="display:none;"></div>
+    <button id="login-submit">Log in</button>
+    <div class="switch-link">New here? <a id="show-signup">Create an account</a></div>
+  </div>
+  <div class="login-box" id="signup-panel" style="display:none;">
+    <h1>Meridian</h1>
+    <p class="sub">Create your account. If you were invited, use the same email your admin or team lead invited.</p>
+    <div class="field"><label>Full name</label><input id="signup-name" type="text" placeholder="Jane Doe"></div>
+    <div class="field"><label>Business name (optional)</label><input id="signup-business-name" type="text" placeholder="Leave blank if you were invited"></div>
+    <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 14px;">Leave blank to auto-name your new workspace. If a team lead or admin already invited you, sign up with that exact email and you'll join their workspace instead.</p>
+    <div class="field"><label>Email</label><input id="signup-email" type="text" placeholder="you@business.com"></div>
+    <div class="field"><label>Password</label><input id="signup-password" type="password" placeholder="8+ chars, upper, lower & a number"></div>
+    <div class="error" id="signup-error" style="display:none;"></div>
+    <button id="signup-submit">Create account</button>
+    <div class="switch-link">Already have an account? <a id="show-login">Log in</a></div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="brand"><h1 id="brand-name-slot">Meridian</h1><p id="brand-tagline-slot"></p></div>
+    <div class="tabs">
+      <button class="tab active" data-view="board">Leads</button>
+      <button class="tab" data-view="profile">Profile</button>
+      <button class="tab" data-view="team" style="display:none;">Team</button>
+      <button class="tab" data-view="admin" style="display:none;">Admin Portal</button>
+    </div>
+    <div class="header-right">
+      <input class="search" id="search-input" type="text" placeholder="Search leads...">
+      <button class="btn-primary" id="add-lead-btn">+ Add lead</button>
+      <div class="user-chip">
+        <div class="avatar" id="current-user-avatar"></div>
+        <div><span id="current-user-name"></span> <span class="role-badge" id="current-user-role-badge"></span></div>
+      </div>
+      <button class="btn-icon" id="logout-btn">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="view active" id="view-board">
+      <div class="stats" id="stats"></div>
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="view" id="view-profile">
+      <div class="panel-box" style="max-width:480px;">
+        <h3>Your profile</h3>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px;">
+          <div class="profile-avatar-lg" id="profile-avatar-lg"></div>
+          <div>
+            <label class="avatar-upload-btn">Change photo<input id="profile-avatar-input" type="file" accept="image/*" style="display:none;"></label>
+            <div><span class="role-badge" id="profile-role-badge"></span></div>
+          </div>
+        </div>
+        <div class="field"><label>Display name</label><input id="profile-name-input" type="text"></div>
+        <div class="field"><label>Username</label><input id="profile-username-input" type="text"></div>
+        <div class="locked-note" id="profile-username-note" style="display:none;">Only a team lead or admin can change this. Ask them to update it for you.</div>
+        <div class="field"><label>Password</label><input id="profile-password-input" type="password" placeholder="Enter a new password to change it"></div>
+        <div class="locked-note" id="profile-password-note" style="display:none;">Only a team lead or admin can change this. Ask them to reset it for you.</div>
+        <button class="btn-primary" id="profile-save-btn" style="width:100%; padding:10px; margin-top:6px;">Save changes</button>
+      </div>
+      <div class="panel-box" style="max-width:480px;">
+        <h3>Your assigned leads</h3>
+        <div id="profile-my-leads"></div>
+      </div>
+    </div>
+
+    <div class="view" id="view-team">
+      <div class="panel-box">
+        <h3>Your agents</h3>
+        <p style="font-size:13px; color:var(--muted); margin:0 0 14px;">As a team lead, you can invite agents and reset their passwords. Only admins and the creator can change roles.</p>
+        <table><thead><tr><th>Name</th><th>Username</th><th>Leads assigned</th><th>Last login</th><th>Actions</th></tr></thead>
+          <tbody id="team-table-body"></tbody></table>
+        <div class="add-user-row" style="margin-top:16px;">
+          <div class="field" style="margin:0;"><label>Name</label><input id="team-invite-name" type="text"></div>
+          <div class="field" style="margin:0;"><label>Email</label><input id="team-invite-email" type="text"></div>
+          <div></div>
+          <button class="btn-primary" id="team-invite-btn">Invite agent</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="view" id="view-admin">
+      <div class="panel-box">
+        <h3>Everyone in Meridian</h3>
+        <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Leads assigned</th><th>Last login</th><th>Actions</th></tr></thead>
+          <tbody id="admin-table-body"></tbody></table>
+        <div class="add-user-row" style="margin-top:16px;">
+          <div class="field" style="margin:0;"><label>Name</label><input id="admin-invite-name" type="text"></div>
+          <div class="field" style="margin:0;"><label>Email</label><input id="admin-invite-email" type="text"></div>
+          <div class="field" style="margin:0;"><label>Role</label>
+            <select id="admin-invite-role"><option value="agent">Agent</option><option value="mid">Team lead</option><option value="admin">Admin</option></select>
+          </div>
+          <button class="btn-primary" id="admin-invite-btn">Send invite</button>
+        </div>
+      </div>
+      <div class="panel-box" id="creator-settings-panel" style="display:none;">
+        <h3>Site settings <span class="role-badge creator" style="margin-left:6px;">creator only</span></h3>
+        <div class="field"><label>Brand name</label><input id="site-brand-name" type="text"></div>
+        <div class="field"><label>Tagline</label><input id="site-tagline" type="text"></div>
+        <div class="field"><label>Accent color</label><input id="site-accent" type="color"></div>
+        <div class="toggle-row"><span>Show Team tab for team leads</span><input type="checkbox" id="site-toggle-team"></div>
+        <div class="toggle-row"><span>Show Admin Portal tab</span><input type="checkbox" id="site-toggle-admin"></div>
+        <button class="btn-primary" id="site-settings-save-btn" style="margin-top:14px;">Save site settings</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="lead-modal">
+  <div class="modal">
+    <h2 id="lead-modal-title">Lead</h2>
+    <div class="field"><label>Name</label><input id="lead-name" type="text"></div>
+    <div class="field"><label>Contact</label><input id="lead-contact" type="text"></div>
+    <div class="field"><label>Estimated value (R)</label><input id="lead-value" type="number"></div>
+    <div class="field"><label>Temperature</label><select id="lead-temp"><option value="hot">Hot</option><option value="warm">Warm</option><option value="cold">Cold</option></select></div>
+    <div class="field"><label>Stage</label>
+      <select id="lead-stage">
+        <option value="new">New</option><option value="contacted">Contacted</option>
+        <option value="proposal">Proposal sent</option><option value="won">Won</option><option value="lost">Lost</option>
+      </select>
+    </div>
+    <div class="field"><label>Assigned to</label><select id="lead-assigned"></select></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="lead-cancel-btn">Cancel</button>
+      <button class="btn-danger" id="lead-delete-btn" style="display:none;">Delete</button>
+      <button class="btn-save" id="lead-save-btn">Save lead</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="user-detail-modal">
+  <div class="modal">
+    <h2>Team member</h2>
+    <div id="user-detail-body"></div>
+    <div class="modal-actions"><button class="btn-cancel" id="user-detail-close" style="flex:none; padding:10px 20px;">Close</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  window.SUPABASE_URL = 'https://pzaawnnpyxcdzwyxpgey.supabase.co';
+  window.SUPABASE_ANON_KEY = 'sb_publishable_nWKYW7__UxLfJPH-iVHEuQ_t-Xdeee8';
+  window.ORG = 'meridian';
+  window.STAGES = [
+    {key:'new', label:'New'}, {key:'contacted', label:'Contacted'},
+    {key:'proposal', label:'Proposal sent'}, {key:'won', label:'Won'}, {key:'lost', label:'Lost'}
+  ];
+  window.BRAND_FALLBACK = {brandName:'Meridian', tagline:'A clear view of every deal, from first contact to close.'};
+</script>
+<script src="crm-core.js"></script>
+</body>
+</html>
