@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function wireStaticEvents(){
+  wirePasswordToggles();
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
@@ -66,6 +67,9 @@ function wireStaticEvents(){
   byId('signup-submit')?.addEventListener('click', handleSignup);
   byId('show-signup')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('signup'); });
   byId('show-login')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('login'); });
+  byId('show-forgot')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('forgot'); });
+  byId('show-login-from-forgot')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('login'); });
+  byId('forgot-submit')?.addEventListener('click', handleForgotPassword);
   byId('logout-btn')?.addEventListener('click', handleLogout);
   byId('add-lead-btn')?.addEventListener('click', () => openLeadModal(null));
   byId('lead-save-btn')?.addEventListener('click', saveLead);
@@ -80,11 +84,46 @@ function wireStaticEvents(){
   byId('user-detail-close')?.addEventListener('click', () => show('user-detail-modal', false));
 }
 
+function wirePasswordToggles(){
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = byId(btn.dataset.target);
+      if(!input) return;
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.textContent = showing ? 'Show' : 'Hide';
+      btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    });
+  });
+}
+
 function showAuthScreen(which){
   show('login-panel', which === 'login');
   show('signup-panel', which === 'signup');
+  show('forgot-panel', which === 'forgot');
   const le = byId('login-error'); if(le) le.style.display = 'none';
   const se = byId('signup-error'); if(se) se.style.display = 'none';
+  const fe = byId('forgot-error'); if(fe) fe.style.display = 'none';
+}
+
+async function handleForgotPassword(){
+  const email = byId('forgot-email').value.trim();
+  const errEl = byId('forgot-error');
+  errEl.style.color = '';
+  errEl.style.display = 'none';
+  if(!email){
+    errEl.textContent = 'Please enter your email.';
+    errEl.style.display = 'block';
+    return;
+  }
+  // Shared reset-password.html lives next to this file regardless of which
+  // product/repo subpath it's served from.
+  const redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'reset-password.html';
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if(error){ errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  errEl.style.color = 'inherit';
+  errEl.textContent = "If that email has an account, a reset link is on its way — check your inbox.";
+  errEl.style.display = 'block';
 }
 
 /* ------------------------------------------------------------------ auth */
