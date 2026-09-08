@@ -258,15 +258,23 @@ async function afterLogin(){
 
   if(profile.is_site_admin){
     // Site admins aren't tied to one product — look up whichever business
-    // belongs to THIS page's product and operate as its creator.
-    const { data: targetBiz, error: bizErr } = await sb.from('businesses')
+    // belongs to THIS page's product and operate as its creator. If no
+    // business exists for this product yet (nobody's signed up), create a
+    // placeholder one instead of locking the admin out of their own product.
+    let { data: targetBiz, error: bizErr } = await sb.from('businesses')
       .select('id').eq('product', window.ORG).limit(1).single();
     if(bizErr || !targetBiz){
-      await sb.auth.signOut();
-      showAuthScreen('login');
-      const errEl = byId('login-error');
-      if(errEl){ errEl.textContent = `No business found yet for ${window.ORG}.`; errEl.style.display = 'block'; }
-      return;
+      const { data: created, error: createErr } = await sb.from('businesses')
+        .insert({ product: window.ORG, name: 'Star Relay Systems (Admin)' })
+        .select('id').single();
+      if(createErr || !created){
+        await sb.auth.signOut();
+        showAuthScreen('login');
+        const errEl = byId('login-error');
+        if(errEl){ errEl.textContent = `Couldn't set up an admin workspace for ${window.ORG}: ${createErr?.message || 'unknown error'}`; errEl.style.display = 'block'; }
+        return;
+      }
+      targetBiz = created;
     }
     currentUser = { ...profile, role: 'creator', business_id: targetBiz.id, isSiteAdmin: true };
   } else if(profile.businesses?.product !== window.ORG){

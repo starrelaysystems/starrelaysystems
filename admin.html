@@ -90,6 +90,7 @@
 <div class="box" id="billing-panel" style="display:none; max-width:760px;">
   <h1>Subscribers & income</h1>
   <p class="sub" id="income-summary">Loading…</p>
+  <div id="product-summary" style="display:flex; gap:10px; margin:14px 0 20px;"></div>
   <table id="billing-table" style="width:100%; border-collapse:collapse; font-size:13px;">
     <thead>
       <tr style="text-align:left; border-bottom:1px solid var(--line);">
@@ -208,6 +209,23 @@
       .map(([cur, cents]) => `${cur.toUpperCase()} ${(cents/100).toLocaleString(undefined,{minimumFractionDigits:2})}`)
       .join(' · ') || 'R 0.00';
     summaryEl.textContent = `Total income to date: ${totalStr} across ${(payments||[]).length} payment(s).`;
+
+    // Per-product business + account counts, so you can see how many
+    // businesses (and how many people) are on each CRM at a glance.
+    const { data: allProfiles } = await sb.from('profiles')
+      .select('business_id, businesses(product)');
+    const products = ['lead_pipeline', 'lead_suite', 'meridian'];
+    const productLabel = { lead_pipeline: 'Lead Pipeline', lead_suite: 'Lead Suite', meridian: 'Meridian' };
+    const summaryHtml = products.map(prod => {
+      const bizCount = (businesses || []).filter(b => b.product === prod).length;
+      const acctCount = (allProfiles || []).filter(p => p.businesses?.product === prod).length;
+      return `<div style="flex:1; border:1px solid var(--line); border-radius:8px; padding:12px; text-align:center;">
+        <div style="font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase;">${productLabel[prod]}</div>
+        <div style="font-size:22px; font-weight:700; margin-top:4px;">${bizCount}</div>
+        <div style="font-size:11.5px; color:var(--muted);">business${bizCount===1?'':'es'} · ${acctCount} account${acctCount===1?'':'s'}</div>
+      </div>`;
+    }).join('');
+    byId('product-summary').innerHTML = summaryHtml;
 
     if(!businesses || businesses.length === 0){
       rowsEl.innerHTML = '<tr><td colspan="5" style="padding:10px 4px; color:var(--muted);">No businesses yet.</td></tr>';
