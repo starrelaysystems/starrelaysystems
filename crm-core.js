@@ -72,6 +72,9 @@ function wireStaticEvents(){
   byId('show-login-from-forgot')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('login'); });
   byId('forgot-submit')?.addEventListener('click', handleForgotPassword);
   byId('logout-btn')?.addEventListener('click', handleLogout);
+  byId('subscribe-starter-btn')?.addEventListener('click', () => startCheckout('starter'));
+  byId('subscribe-pro-btn')?.addEventListener('click', () => startCheckout('pro'));
+  byId('manage-billing-btn')?.addEventListener('click', openBillingPortal);
   byId('add-lead-btn')?.addEventListener('click', () => openLeadModal(null));
   byId('lead-save-btn')?.addEventListener('click', saveLead);
   byId('lead-cancel-btn')?.addEventListener('click', closeLeadModal);
@@ -137,6 +140,36 @@ async function handleLogin(){
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if(error){ errEl.textContent = error.message; errEl.style.display = 'block'; return; }
   await afterLogin();
+}
+
+const FUNCTIONS_BASE = window.SUPABASE_URL.replace('.supabase.co', '.supabase.co/functions/v1');
+
+async function callBillingFunction(name, body){
+  const { data: { session } } = await sb.auth.getSession();
+  const res = await fetch(`${FUNCTIONS_BASE}/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function startCheckout(plan){
+  const { url, error } = await callBillingFunction('create-checkout-session', {
+    plan,
+    success_url: window.location.href,
+    cancel_url: window.location.href
+  });
+  if(error){ alert(error); return; }
+  window.location.href = url;
+}
+
+async function openBillingPortal(){
+  const { url, error } = await callBillingFunction('create-portal-session', {
+    return_url: window.location.href
+  });
+  if(error){ alert(error); return; }
+  window.location.href = url;
 }
 
 async function handleGoogleSignIn(){

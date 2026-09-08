@@ -83,8 +83,28 @@
     <a href="lead-suite.html">Enter Lead Suite →</a>
     <a href="meridian.html">Enter Meridian →</a>
   </div>
+  <div class="signout" id="show-billing" style="text-align:center; margin-top:14px;">View subscribers & income</div>
   <div class="signout" id="signout-link">Log out</div>
 </div>
+
+<div class="box" id="billing-panel" style="display:none; max-width:760px;">
+  <h1>Subscribers & income</h1>
+  <p class="sub" id="income-summary">Loading…</p>
+  <table id="billing-table" style="width:100%; border-collapse:collapse; font-size:13px;">
+    <thead>
+      <tr style="text-align:left; border-bottom:1px solid var(--line);">
+        <th style="padding:6px 4px;">Business</th>
+        <th style="padding:6px 4px;">Product</th>
+        <th style="padding:6px 4px;">Plan</th>
+        <th style="padding:6px 4px;">Status</th>
+        <th style="padding:6px 4px;">Renews / ended</th>
+      </tr>
+    </thead>
+    <tbody id="billing-rows"></tbody>
+  </table>
+  <div class="signout" id="hide-billing" style="text-align:center; margin-top:18px;">← Back</div>
+</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
@@ -150,6 +170,59 @@
     byId('launcher').classList.remove('visible');
     byId('login-box').style.display = 'block';
   });
+
+  byId('show-billing').addEventListener('click', async () => {
+    byId('launcher').classList.remove('visible');
+    byId('billing-panel').style.display = 'block';
+    await loadBilling();
+  });
+  byId('hide-billing').addEventListener('click', () => {
+    byId('billing-panel').style.display = 'none';
+    byId('launcher').classList.add('visible');
+  });
+
+  function esc(s){ const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+  async function loadBilling(){
+    const rowsEl = byId('billing-rows');
+    const summaryEl = byId('income-summary');
+    rowsEl.innerHTML = '<tr><td colspan="5" style="padding:10px 4px;">Loading…</td></tr>';
+
+    const { data: businesses, error: bErr } = await sb.from('businesses')
+      .select('name, product, plan, subscription_status, current_period_end')
+      .order('name');
+    const { data: payments, error: pErr } = await sb.from('payments')
+      .select('amount_cents, currency');
+
+    if(bErr || pErr){
+      summaryEl.textContent = 'Could not load billing data — ' + (bErr?.message || pErr?.message);
+      rowsEl.innerHTML = '';
+      return;
+    }
+
+    const totalsByCurrency = {};
+    (payments || []).forEach(p => {
+      totalsByCurrency[p.currency] = (totalsByCurrency[p.currency] || 0) + p.amount_cents;
+    });
+    const totalStr = Object.entries(totalsByCurrency)
+      .map(([cur, cents]) => `${cur.toUpperCase()} ${(cents/100).toLocaleString(undefined,{minimumFractionDigits:2})}`)
+      .join(' · ') || 'R 0.00';
+    summaryEl.textContent = `Total income to date: ${totalStr} across ${(payments||[]).length} payment(s).`;
+
+    if(!businesses || businesses.length === 0){
+      rowsEl.innerHTML = '<tr><td colspan="5" style="padding:10px 4px; color:var(--muted);">No businesses yet.</td></tr>';
+      return;
+    }
+
+    rowsEl.innerHTML = businesses.map(b => `
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:6px 4px;">${esc(b.name)}</td>
+        <td style="padding:6px 4px;">${esc(b.product)}</td>
+        <td style="padding:6px 4px;">${esc(b.plan || '—')}</td>
+        <td style="padding:6px 4px;">${esc(b.subscription_status || 'no subscription')}</td>
+        <td style="padding:6px 4px;">${b.current_period_end ? new Date(b.current_period_end).toLocaleDateString() : '—'}</td>
+      </tr>`).join('');
+  }
 
   byId('show-forgot').addEventListener('click', () => {
     byId('login-box').style.display = 'none';
