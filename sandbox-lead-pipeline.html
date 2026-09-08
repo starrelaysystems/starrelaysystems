@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lead Pipeline</title>
+<title>Lead Pipeline — Free trial sandbox</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <style>
   :root{
@@ -25,13 +25,8 @@
   .field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; color:var(--muted);}
   .field input, .field select{width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:6px; font-size:14px; font-family:inherit;}
   .error{color:var(--hot); font-size:12.5px; margin:-6px 0 12px;}
-  .login-box button{width:100%; background:var(--teal); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:600; font-size:14px; cursor:pointer; margin-top:18px;}
+  .login-box button{width:100%; background:var(--teal); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:600; font-size:14px; cursor:pointer; margin-top:6px;}
   .switch-link{font-size:12.5px; color:var(--muted); margin-top:16px; text-align:center;}
-  .oauth-divider{display:flex; align-items:center; gap:10px; margin:14px 0; font-size:11.5px; color:var(--muted);}
-  .oauth-divider::before, .oauth-divider::after{content:""; flex:1; height:1px; background:var(--border);}
-  .btn-google{width:100%; background:#fff; color:var(--ink); border:1px solid var(--border); padding:10px; border-radius:6px; font-weight:600; font-size:13.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;}
-  .btn-google:hover{background:var(--surface-2);}
-  .g-mark{width:18px; height:18px; border-radius:50%; background:#4285F4; color:#fff; font-size:11px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;}
   .switch-link a{color:var(--teal-dark); cursor:pointer; text-decoration:underline;}
 
   #app{display:none;}
@@ -121,188 +116,82 @@
   .pw-wrap input{padding-right:54px;}
   .pw-toggle{position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; padding:5px 7px; z-index:2;}
   .pw-toggle:hover{color:var(--ink);}
-  /* Needs to out-specificity ".login-box button" above, or the toggle
-     inherits that button's full-width teal styling and covers the field. */
-  .pw-wrap .pw-toggle{width:auto; background:none; color:var(--muted); padding:5px 7px; margin-top:0; border-radius:4px;}
-  .pw-wrap .pw-toggle:hover{background:none; color:var(--ink);}
   /* Suppress browsers' own built-in reveal-password icon so it can't overlap our custom Show/Hide button */
   input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear{ display:none; }
   .login-box .brand-logo{display:block; height:34px; margin-bottom:14px;}
+
+  #trial-banner{background:var(--ink); color:#fff; text-align:center; font-size:13px; font-weight:600; padding:9px 12px;}
+  #trial-banner a{color:inherit;}
+  .subscribe-btn{background:#C4622D; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer; text-decoration:none;}
+  #expired-screen{display:none; position:fixed; inset:0; background:var(--paper); align-items:center; justify-content:center; padding:24px;}
+  #expired-screen.visible{display:flex;}
+  .expired-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:40px; max-width:420px; text-align:center;}
+  .expired-box img{height:34px; margin-bottom:16px;}
+  .expired-box h1{font-size:22px; margin:0 0 10px;}
+  .expired-box p{color:var(--muted); font-size:14px; margin:0 0 22px;}
 </style>
 </head>
 <body>
 
-<div id="auth-screen">
-  <div class="login-box" id="login-panel">
-    <img class="brand-logo" src="assets/logo.png" alt="Star Relay Systems">
-    <h1>Lead Pipeline</h1>
-    <p class="sub">Track every lead from first contact to closed deal</p>
-    <div class="field"><label>Email</label><input id="login-email" type="text" placeholder="you@business.com"></div>
-    <div class="field"><label>Password</label><div class="pw-wrap"><input id="login-password" type="password" placeholder="••••••••"><button type="button" class="pw-toggle" data-target="login-password" aria-label="Show password">Show</button></div></div>
-    <div class="error" id="login-error" style="display:none;"></div>
-    <button id="login-submit">Log in</button>
-    <div class="oauth-divider"><span>or</span></div>
-    <button type="button" class="btn-google" id="google-signin-btn"><span class="g-mark">G</span> Continue with Google</button>
-    <div class="switch-link">New here? <a id="show-signup">Create an account</a></div>
-    <div class="switch-link">Forgot your password? <a id="show-forgot">Reset it</a></div>
-  </div>
-  <div class="login-box" id="signup-panel" style="display:none;">
-    <h1>Lead Pipeline</h1>
-    <p class="sub">Create your account. If you were invited, use the same email your admin or team lead invited.</p>
-    <div class="field"><label>Full name</label><input id="signup-name" type="text" placeholder="Jane Doe"></div>
-    <div class="field"><label>Business name (optional)</label><input id="signup-business-name" type="text" placeholder="Leave blank if you were invited"></div>
-    <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 14px;">Leave blank to auto-name your new workspace. If a team lead or admin already invited you, sign up with that exact email and you'll join their workspace instead.</p>
-    <div class="field"><label>Email</label><input id="signup-email" type="text" placeholder="you@business.com"></div>
-    <div class="field"><label>Password</label><div class="pw-wrap"><input id="signup-password" type="password" placeholder="Choose a password"><button type="button" class="pw-toggle" data-target="signup-password" aria-label="Show password">Show</button></div></div>
-    <div class="error" id="signup-error" style="display:none;"></div>
-    <button id="signup-submit">Create account</button>
-    <div class="switch-link">Already have an account? <a id="show-login">Log in</a></div>
-  </div>
-  <div class="login-box" id="forgot-panel" style="display:none;">
-    <h1>Reset password</h1>
-    <p class="sub">Enter the email on your account and we'll send you a link to set a new password.</p>
-    <div class="field"><label>Email</label><input id="forgot-email" type="text" placeholder="you@business.com"></div>
-    <div class="error" id="forgot-error" style="display:none;"></div>
-    <button id="forgot-submit">Send reset link</button>
-    <div class="switch-link">Remembered it? <a id="show-login-from-forgot">Log in</a></div>
-  </div>
-</div>
+<div id="trial-banner"></div>
 
 <div id="app">
   <header>
     <div class="brand" style="display:flex; align-items:center; gap:10px;">
       <img src="assets/logo.png" alt="Star Relay Systems" style="height:26px;">
-      <div><h1 id="brand-name-slot">Lead Pipeline</h1><p id="brand-tagline-slot"></p></div>
-    </div>
-    <div class="tabs">
-      <button class="tab active" data-view="board">Leads</button>
-      <button class="tab" data-view="profile">Profile</button>
-      <button class="tab" data-view="team" style="display:none;">Team</button>
-      <button class="tab" data-view="admin" style="display:none;">Admin Portal</button>
+      <div><h1>Lead Pipeline <span style="font-size:12px; font-weight:600; opacity:.7;">(sandbox)</span></h1><p>Track every lead from first contact to closed deal</p></div>
     </div>
     <div class="header-right">
       <input class="search" id="search-input" type="text" placeholder="Search leads...">
       <button class="btn-primary" id="add-lead-btn">+ Add lead</button>
-      <div class="user-chip">
-        <div class="avatar" id="current-user-avatar"></div>
-        <div><span id="current-user-name"></span> <span class="role-badge" id="current-user-role-badge"></span></div>
-      </div>
-      <button class="btn-icon" id="logout-btn">Log out</button>
+      <a class="subscribe-btn" id="signup-cta-1" href="#">Subscribe now</a>
     </div>
   </header>
-
   <main>
-    <div class="view active" id="view-board">
-      <div class="stats" id="stats"></div>
-      <div class="board" id="board"></div>
-    </div>
-
-    <div class="view" id="view-profile">
-      <div class="panel-box" style="max-width:480px;">
-        <h3>Your profile</h3>
-        <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px;">
-          <div class="profile-avatar-lg" id="profile-avatar-lg"></div>
-          <div>
-            <label class="avatar-upload-btn">Change photo<input id="profile-avatar-input" type="file" accept="image/*" style="display:none;"></label>
-            <div><span class="role-badge" id="profile-role-badge"></span></div>
-          </div>
-        </div>
-        <div class="field"><label>Display name</label><input id="profile-name-input" type="text"></div>
-        <div class="field"><label>Username</label><input id="profile-username-input" type="text"></div>
-        <div class="locked-note" id="profile-username-note" style="display:none;">Only a team lead or admin can change this. Ask them to update it for you.</div>
-        <div class="field"><label>Password</label><div class="pw-wrap"><input id="profile-password-input" type="password" placeholder="Enter a new password to change it"><button type="button" class="pw-toggle" data-target="profile-password-input" aria-label="Show password">Show</button></div></div>
-        <div class="locked-note" id="profile-password-note" style="display:none;">Only a team lead or admin can change this. Ask them to reset it for you.</div>
-        <button class="btn-primary" id="profile-save-btn" style="width:100%; padding:10px; margin-top:6px;">Save changes</button>
-      </div>
-      <div class="panel-box" style="max-width:480px;">
-        <h3>Your assigned leads</h3>
-        <div id="profile-my-leads"></div>
-      </div>
-    </div>
-
-    <div class="view" id="view-team">
-      <div class="panel-box">
-        <h3>Your agents</h3>
-        <p style="font-size:13px; color:var(--muted); margin:0 0 14px;">As a team lead, you can invite agents and reset their passwords. Only admins and the creator can change roles.</p>
-        <table><thead><tr><th>Name</th><th>Username</th><th>Leads assigned</th><th>Last login</th><th>Actions</th></tr></thead>
-          <tbody id="team-table-body"></tbody></table>
-        <div class="add-user-row" style="margin-top:16px;">
-          <div class="field" style="margin:0;"><label>Name</label><input id="team-invite-name" type="text"></div>
-          <div class="field" style="margin:0;"><label>Email</label><input id="team-invite-email" type="text"></div>
-          <div></div>
-          <button class="btn-primary" id="team-invite-btn">Invite agent</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="view" id="view-admin">
-      <div class="panel-box">
-        <h3>Everyone in Lead Pipeline</h3>
-        <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Leads assigned</th><th>Last login</th><th>Actions</th></tr></thead>
-          <tbody id="admin-table-body"></tbody></table>
-        <div class="add-user-row" style="margin-top:16px;">
-          <div class="field" style="margin:0;"><label>Name</label><input id="admin-invite-name" type="text"></div>
-          <div class="field" style="margin:0;"><label>Email</label><input id="admin-invite-email" type="text"></div>
-          <div class="field" style="margin:0;"><label>Role</label>
-            <select id="admin-invite-role"><option value="agent">Agent</option><option value="mid">Team lead</option><option value="admin">Admin</option></select>
-          </div>
-          <button class="btn-primary" id="admin-invite-btn">Send invite</button>
-        </div>
-      </div>
-      <div class="panel-box" id="creator-settings-panel" style="display:none;">
-        <h3>Site settings <span class="role-badge creator" style="margin-left:6px;">creator only</span></h3>
-        <div class="field"><label>Brand name</label><input id="site-brand-name" type="text"></div>
-        <div class="field"><label>Tagline</label><input id="site-tagline" type="text"></div>
-        <div class="field"><label>Accent color</label><input id="site-accent" type="color"></div>
-        <div class="toggle-row"><span>Show Team tab for team leads</span><input type="checkbox" id="site-toggle-team"></div>
-        <div class="toggle-row"><span>Show Admin Portal tab</span><input type="checkbox" id="site-toggle-admin"></div>
-        <button class="btn-primary" id="site-settings-save-btn" style="margin-top:14px;">Save site settings</button>
-      </div>
-    </div>
+    <div class="stats" id="stats"></div>
+    <div class="board" id="board"></div>
   </main>
 </div>
 
 <div class="overlay" id="lead-modal">
   <div class="modal">
-    <h2 id="lead-modal-title">Lead</h2>
+    <h2>New lead</h2>
     <div class="field"><label>Name</label><input id="lead-name" type="text"></div>
     <div class="field"><label>Contact</label><input id="lead-contact" type="text"></div>
     <div class="field"><label>Estimated value (R)</label><input id="lead-value" type="number"></div>
     <div class="field"><label>Temperature</label><select id="lead-temp"><option value="hot">Hot</option><option value="warm" selected>Warm</option><option value="cold">Cold</option></select></div>
-    <div class="field"><label>Stage</label>
-      <select id="lead-stage">
-        <option value="new">New</option><option value="contacted">Contacted</option>
-        <option value="proposal">Proposal sent</option><option value="won">Won</option><option value="lost">Lost</option>
-      </select>
-    </div>
-    <div class="field"><label>Assigned to</label><select id="lead-assigned"></select></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="lead-cancel-btn">Cancel</button>
-      <button class="btn-danger" id="lead-delete-btn" style="display:none;">Delete</button>
       <button class="btn-save" id="lead-save-btn">Save lead</button>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="user-detail-modal">
-  <div class="modal">
-    <h2>Team member</h2>
-    <div id="user-detail-body"></div>
-    <div class="modal-actions"><button class="btn-cancel" id="user-detail-close" style="flex:none; padding:10px 20px;">Close</button></div>
+<div id="expired-screen">
+  <div class="expired-box">
+    <img src="assets/logo.png" alt="Star Relay Systems">
+    <h1>Your 5-day trial has ended</h1>
+    <p>Subscribe to keep your board, invite your team, and get real accounts for everyone.</p>
+    <a class="subscribe-btn" id="signup-cta-2" href="#" style="display:inline-block; padding:12px 20px; font-size:14px;">Subscribe to Lead Pipeline →</a>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-  window.SUPABASE_URL = 'https://pzaawnnpyxcdzwyxpgey.supabase.co';
-  window.SUPABASE_ANON_KEY = 'sb_publishable_nWKYW7__UxLfJPH-iVHEuQ_t-Xdeee8';
-  window.ORG = 'lead_pipeline';
+  window.SANDBOX_ORG = 'lead_pipeline';
+  window.TRIAL_DAYS = 5;
   window.STAGES = [
     {key:'new', label:'New'}, {key:'contacted', label:'Contacted'},
     {key:'proposal', label:'Proposal sent'}, {key:'won', label:'Won'}, {key:'lost', label:'Lost'}
   ];
-  window.BRAND_FALLBACK = {brandName:'Lead Pipeline', tagline:'Track every lead from first contact to closed deal'};
+  window.SEED_LEADS = [
+        {name:'Naledi Khumalo', contact:'naledi@brightspace.co.za', value:24000, temp:'hot', stage:'proposal'},
+        {name:'Deon van der Merwe', contact:'deon.vdm@outlook.com', value:9500, temp:'warm', stage:'contacted'},
+        {name:'Aisha Patel', contact:'081 555 0199', value:41000, temp:'hot', stage:'new'},
+        {name:'Sipho Ndlovu', contact:'sipho@ndlovulogistics.co.za', value:15500, temp:'cold', stage:'contacted'},
+        {name:'Chantelle Botha', contact:'chantelle.b@gmail.com', value:6000, temp:'warm', stage:'won'}
+      ];
+  window.SIGNUP_URL = 'lead-pipeline.html';
 </script>
-<script src="crm-core.js"></script>
+<script src="sandbox-core.js"></script>
 </body>
 </html>

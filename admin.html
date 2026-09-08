@@ -24,7 +24,7 @@
   .field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; color:var(--muted);}
   .field input{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px; font-size:14px; font-family:inherit;}
   .error{color:var(--signal-dark); font-size:12.5px; margin:-6px 0 12px; display:none;}
-  button.primary{width:100%; background:var(--signal); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:600; font-size:14px; cursor:pointer;}
+  button.primary{width:100%; background:var(--signal); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:600; font-size:14px; cursor:pointer; margin-top:12px;}
   button.primary:hover{background:var(--signal-dark);}
 
   #launcher{display:none;}
@@ -39,19 +39,29 @@
 
   .pw-wrap{position:relative;}
   .pw-wrap input{padding-right:54px;}
-  .pw-toggle{position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; padding:5px 7px;}
+  .pw-toggle{position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; padding:5px 7px; z-index:2;}
   .pw-toggle:hover{color:var(--ink);}
+  input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear{ display:none; }
+  .box .brand-logo{display:block; height:32px; margin:0 auto 14px;}
+  .oauth-divider{display:flex; align-items:center; gap:10px; margin:14px 0; font-size:11.5px; color:var(--muted);}
+  .oauth-divider::before, .oauth-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .btn-google{width:100%; background:#fff; color:var(--ink); border:1px solid var(--line); padding:10px; border-radius:6px; font-weight:600; font-size:13.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .btn-google:hover{background:var(--paper-2);}
+  .g-mark{width:18px; height:18px; border-radius:50%; background:#4285F4; color:#fff; font-size:11px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;}
 </style>
 </head>
 <body>
 
 <div class="box" id="login-box">
+  <img class="brand-logo" src="assets/logo.png" alt="Star Relay Systems">
   <h1>Site Admin</h1>
   <p class="sub">Star Relay Systems — internal login. Not for customers.</p>
   <div class="field"><label>Email</label><input id="login-email" type="text" placeholder="you@starrelaysystems.co.za"></div>
   <div class="field"><label>Password</label><div class="pw-wrap"><input id="login-password" type="password" placeholder="••••••••"><button type="button" class="pw-toggle" data-target="login-password" aria-label="Show password">Show</button></div></div>
   <div class="error" id="login-error"></div>
   <button class="primary" id="login-submit">Log in</button>
+  <div class="oauth-divider"><span>or</span></div>
+  <button type="button" class="btn-google" id="google-signin-btn"><span class="g-mark">G</span> Continue with Google</button>
   <div class="signout" id="show-forgot" style="text-align:center; margin-top:14px;">Forgot your password?</div>
 </div>
 
@@ -125,6 +135,14 @@
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if(error){ errEl.textContent = error.message; errEl.style.display = 'block'; return; }
     await afterLogin();
+  });
+
+  byId('google-signin-btn').addEventListener('click', async () => {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+    if(error){ const e = byId('login-error'); e.textContent = error.message; e.style.display = 'block'; }
   });
 
   byId('signout-link').addEventListener('click', async () => {

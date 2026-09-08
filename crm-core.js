@@ -65,6 +65,7 @@ function wireStaticEvents(){
   });
   byId('login-submit')?.addEventListener('click', handleLogin);
   byId('signup-submit')?.addEventListener('click', handleSignup);
+  byId('google-signin-btn')?.addEventListener('click', handleGoogleSignIn);
   byId('show-signup')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('signup'); });
   byId('show-login')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('login'); });
   byId('show-forgot')?.addEventListener('click', (e)=>{ e.preventDefault(); showAuthScreen('forgot'); });
@@ -138,6 +139,20 @@ async function handleLogin(){
   await afterLogin();
 }
 
+async function handleGoogleSignIn(){
+  // Sends the person to Google, then back to this exact page/product — so
+  // window.ORG is already correct when afterLogin() runs on return, no need
+  // to carry it across the redirect.
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error){
+    const errEl = byId('login-error');
+    if(errEl){ errEl.textContent = error.message; errEl.style.display = 'block'; }
+  }
+}
+
 async function handleSignup(){
   const name = byId('signup-name').value.trim();
   const email = byId('signup-email').value.trim();
@@ -150,12 +165,10 @@ async function handleSignup(){
     errEl.style.display = 'block';
     return;
   }
-  const strongEnough = password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
-  if(!strongEnough){
-    errEl.textContent = 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.';
-    errEl.style.display = 'block';
-    return;
-  }
+  // No client-side strength rule here on purpose — Supabase's own Auth
+  // password policy (Dashboard → Authentication → Policies) is the single
+  // source of truth. Whatever it rejects, it rejects with error.message
+  // below, so there's only one place a password requirement can live.
   const { error } = await sb.auth.signUp({
     email, password,
     options: { data: { org: window.ORG, name, business_name: businessName } }
@@ -182,10 +195,26 @@ async function afterLogin(){
   const { data: authUser } = await sb.auth.getUser();
   if(!authUser?.user){ showAuthScreen('login'); return; }
 
-  const { data: profile, error } = await sb.from('profiles')
+  let { data: profile, error } = await sb.from('profiles')
     .select('*, businesses(product)')
     .eq('id', authUser.user.id)
     .single();
+
+  // No profile row yet — this is normal for a first-time Google sign-in,
+  // since the OAuth provider never sends our custom "org" signup metadata.
+  // ensure_org_profile (see google-oauth-setup.sql) attaches this account
+  // to the right business the same way a normal email signup would, then
+  // we just re-fetch. If it still fails, this really is a missing account.
+  if(error || !profile){
+    const { error: rpcErr } = await sb.rpc('ensure_org_profile', { p_org: window.ORG });
+    if(!rpcErr){
+      ({ data: profile, error } = await sb.from('profiles')
+        .select('*, businesses(product)')
+        .eq('id', authUser.user.id)
+        .single());
+    }
+  }
+
   if(error || !profile){
     await sb.auth.signOut();
     showAuthScreen('login');

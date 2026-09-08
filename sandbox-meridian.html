@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — Free trial sandbox</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<style>
+  :root{
+    --bg:#FAF7F0; --surface:#FFFFFF; --surface-2:#F1ECE0; --border:#E2DCCB;
+    --text:#2B2A25; --muted:#8A8370; --emerald:var(--accent-override, #2F5233); --emerald-dark:#1F3A23;
+    --hot:#9C3B2E; --hot-bg:#F5E4DF; --warm:#B07C22; --warm-bg:#F6ECD9;
+    --cold:#3E6478; --cold-bg:#E3EEF2; --won:#2F5233; --won-bg:#E1EAE1;
+    --creator:#6E4FB0; --creator-bg:#EAE2F7;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);}
+  .serif{font-family:'Cormorant Garamond',serif;}
+
+  #auth-screen{position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:50;}
+  .login-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:36px; width:100%; max-width:340px;}
+  .login-box h1{font-size:26px; margin:0 0 4px; color:var(--emerald-dark); font-family:'Cormorant Garamond',serif;}
+  .login-box p.sub{font-size:12.5px; color:var(--muted); margin:0 0 24px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:6px;}
+  .field input, .field select{width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:6px; font-size:13.5px; font-family:inherit;}
+  .error{color:var(--hot); font-size:12.5px; margin:-6px 0 12px;}
+  .login-box button{width:100%; background:var(--emerald); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:700; font-size:13.5px; cursor:pointer; margin-top:6px;}
+  .switch-link{font-size:12px; color:var(--muted); margin-top:16px; text-align:center;}
+  .switch-link a{color:var(--emerald-dark); cursor:pointer; text-decoration:underline;}
+
+  #app{display:none;}
+  #app.visible{display:block;}
+
+  header{background:var(--surface); border-bottom:1px solid var(--border); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;}
+  .brand h1{font-size:24px; margin:0; font-weight:700; color:var(--emerald-dark); font-family:'Cormorant Garamond',serif;}
+  .brand p{font-size:11.5px; color:var(--muted); margin:2px 0 0; font-style:italic;}
+  .tabs{display:flex; gap:4px; background:var(--surface-2); padding:4px; border-radius:8px; flex-wrap:wrap;}
+  .tab{padding:8px 14px; font-size:12px; font-weight:600; color:var(--muted); border-radius:6px; cursor:pointer; border:none; background:none;}
+  .tab.active{background:var(--surface); color:var(--emerald-dark); box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  .header-right{display:flex; align-items:center; gap:10px;}
+  input.search{border:1px solid var(--border); background:var(--surface); padding:8px 12px; border-radius:6px; font-size:12.5px; width:160px; font-family:inherit; color:var(--text);}
+  .btn-primary{background:var(--emerald); color:#fff; border:none; padding:9px 16px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer;}
+  .btn-icon{background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:6px; font-size:12px; cursor:pointer;}
+  .user-chip{display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer;}
+  .avatar{width:28px; height:28px; border-radius:50%; background:var(--emerald); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; overflow:hidden; flex-shrink:0;}
+  .avatar img{width:100%; height:100%; object-fit:cover;}
+  .role-badge{font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; padding:2px 6px; border-radius:9px;}
+  .role-badge.admin{background:var(--hot-bg); color:var(--hot);}
+  .role-badge.mid{background:var(--warm-bg); color:var(--warm);}
+  .role-badge.agent{background:var(--cold-bg); color:var(--cold);}
+  .role-badge.creator{background:var(--creator-bg); color:var(--creator);}
+
+  main{padding:28px 32px 60px; max-width:1400px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:18px; margin-bottom:26px;}
+  .stat{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px;}
+  .stat .num{font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--emerald-dark); line-height:1;}
+  .stat .lbl{font-size:11.5px; color:var(--muted); margin-top:5px;}
+
+  .board{display:grid; grid-template-columns:repeat(5,minmax(200px,1fr)); gap:14px; overflow-x:auto;}
+  .column{background:var(--surface-2); border-radius:10px; padding:12px; min-height:160px;}
+  .column h3{font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:700; margin:2px 4px 12px; display:flex; justify-content:space-between;}
+  .column h3 .count{color:var(--text);}
+  .lead-card{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; cursor:grab;}
+  .lead-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+  .card-top{display:flex; align-items:center; gap:9px; margin-bottom:9px;}
+  .card-top .name{font-weight:600; font-size:13px;}
+  .card-top .contact{font-size:11px; color:var(--muted);}
+  .card-bottom{display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;}
+  .value{font-family:'Cormorant Garamond',serif; font-weight:700; font-size:15px; color:var(--emerald-dark);}
+  .assignee{font-size:10px; color:var(--muted);}
+  .tag{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;}
+  .tag.hot{background:var(--hot-bg); color:var(--hot);}
+  .tag.warm{background:var(--warm-bg); color:var(--warm);}
+  .tag.cold{background:var(--cold-bg); color:var(--cold);}
+  .empty-col{font-size:11.5px; color:var(--muted); text-align:center; padding:20px 6px; border:1px dashed var(--border); border-radius:8px;}
+  .column.dragover{background:var(--border);}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th, td{text-align:left; padding:8px 9px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;}
+  .small-btn{background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:5px 9px; border-radius:5px; font-size:11px; cursor:pointer; margin-right:5px;}
+  .small-btn.danger{color:var(--hot); border-color:var(--hot);}
+  .role-select{padding:5px 8px; border-radius:5px; border:1px solid var(--border); font-size:11.5px;}
+  .panel-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:22px; margin-bottom:22px;}
+  .panel-box h3{font-size:16px; margin:0 0 16px; color:var(--emerald-dark); font-family:'Cormorant Garamond',serif;}
+  .add-user-row{display:grid; grid-template-columns:1.5fr 1.5fr 1fr auto; gap:9px; align-items:end;}
+  .locked-note{font-size:11px; color:var(--muted); margin:-8px 0 12px;}
+  .profile-avatar-lg{width:80px; height:80px; border-radius:50%; background:var(--emerald); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:26px; overflow:hidden; flex-shrink:0;}
+  .profile-avatar-lg img{width:100%; height:100%; object-fit:cover;}
+  .avatar-upload-btn{font-size:12px; color:var(--emerald-dark); cursor:pointer; text-decoration:underline; margin-top:6px; display:inline-block;}
+  .my-leads-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:12.5px;}
+  .section-label{font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:0.06em; margin:16px 0 6px;}
+  .perm-list{display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12.5px;}
+  .perm-list .yes{color:var(--emerald-dark);} .perm-list .no{color:var(--hot);}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .toggle-row:last-child{border-bottom:none;}
+
+  .overlay{display:none; position:fixed; inset:0; background:rgba(43,42,37,0.45); align-items:center; justify-content:center; padding:20px; z-index:20;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--surface); border-radius:10px; padding:26px; width:100%; max-width:420px; max-height:88vh; overflow-y:auto;}
+  .modal h2{margin:0 0 18px; font-size:20px; font-family:'Cormorant Garamond',serif;}
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .modal-actions button{flex:1; padding:10px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; border:none;}
+  .btn-cancel{background:var(--surface-2); color:var(--text);}
+  .btn-save{background:var(--emerald); color:#fff;}
+  .btn-danger{background:var(--hot); color:#fff;}
+  .kv{margin-bottom:8px;} .kv .k{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;} .kv .v{font-size:13px;}
+  .user-detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px;}
+
+  @media (max-width:900px){ .board{grid-template-columns:1fr;} .perm-list{grid-template-columns:1fr;} }
+
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:54px;}
+  .pw-toggle{position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; padding:5px 7px; z-index:2;}
+  .pw-toggle:hover{color:var(--ink);}
+  /* Suppress browsers' own built-in reveal-password icon so it can't overlap our custom Show/Hide button */
+  input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear{ display:none; }
+  .login-box .brand-logo{display:block; height:34px; margin-bottom:14px;}
+
+  #trial-banner{background:var(--ink); color:#fff; text-align:center; font-size:13px; font-weight:600; padding:9px 12px;}
+  #trial-banner a{color:inherit;}
+  .subscribe-btn{background:#C4622D; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer; text-decoration:none;}
+  #expired-screen{display:none; position:fixed; inset:0; background:var(--paper); align-items:center; justify-content:center; padding:24px;}
+  #expired-screen.visible{display:flex;}
+  .expired-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:40px; max-width:420px; text-align:center;}
+  .expired-box img{height:34px; margin-bottom:16px;}
+  .expired-box h1{font-size:22px; margin:0 0 10px;}
+  .expired-box p{color:var(--muted); font-size:14px; margin:0 0 22px;}
+</style>
+</head>
+<body>
+
+<div id="trial-banner"></div>
+
+<div id="app">
+  <header>
+    <div class="brand" style="display:flex; align-items:center; gap:10px;">
+      <img src="assets/logo.png" alt="Star Relay Systems" style="height:26px;">
+      <div><h1>Meridian <span style="font-size:12px; font-weight:600; opacity:.7;">(sandbox)</span></h1><p>A clear view of every deal, from first contact to close.</p></div>
+    </div>
+    <div class="header-right">
+      <input class="search" id="search-input" type="text" placeholder="Search leads...">
+      <button class="btn-primary" id="add-lead-btn">+ Add lead</button>
+      <a class="subscribe-btn" id="signup-cta-1" href="#">Subscribe now</a>
+    </div>
+  </header>
+  <main>
+    <div class="stats" id="stats"></div>
+    <div class="board" id="board"></div>
+  </main>
+</div>
+
+<div class="overlay" id="lead-modal">
+  <div class="modal">
+    <h2>New lead</h2>
+    <div class="field"><label>Name</label><input id="lead-name" type="text"></div>
+    <div class="field"><label>Contact</label><input id="lead-contact" type="text"></div>
+    <div class="field"><label>Estimated value (R)</label><input id="lead-value" type="number"></div>
+    <div class="field"><label>Temperature</label><select id="lead-temp"><option value="hot">Hot</option><option value="warm" selected>Warm</option><option value="cold">Cold</option></select></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="lead-cancel-btn">Cancel</button>
+      <button class="btn-save" id="lead-save-btn">Save lead</button>
+    </div>
+  </div>
+</div>
+
+<div id="expired-screen">
+  <div class="expired-box">
+    <img src="assets/logo.png" alt="Star Relay Systems">
+    <h1>Your 14-day trial has ended</h1>
+    <p>Subscribe to keep your board, invite your team, and get real accounts for everyone.</p>
+    <a class="subscribe-btn" id="signup-cta-2" href="#" style="display:inline-block; padding:12px 20px; font-size:14px;">Subscribe to Meridian →</a>
+  </div>
+</div>
+
+<script>
+  window.SANDBOX_ORG = 'meridian';
+  window.TRIAL_DAYS = 14;
+  window.STAGES = [
+    {key:'new', label:'New'}, {key:'contacted', label:'Contacted'},
+    {key:'proposal', label:'Proposal sent'}, {key:'won', label:'Won'}, {key:'lost', label:'Lost'}
+  ];
+  window.SEED_LEADS = [
+        {name:'Naledi Khumalo', contact:'naledi@brightspace.co.za', value:24000, temp:'hot', stage:'proposal'},
+        {name:'Deon van der Merwe', contact:'deon.vdm@outlook.com', value:9500, temp:'warm', stage:'contacted'},
+        {name:'Aisha Patel', contact:'081 555 0199', value:41000, temp:'hot', stage:'new'},
+        {name:'Sipho Ndlovu', contact:'sipho@ndlovulogistics.co.za', value:15500, temp:'cold', stage:'contacted'},
+        {name:'Chantelle Botha', contact:'chantelle.b@gmail.com', value:6000, temp:'warm', stage:'won'}
+      ];
+  window.SIGNUP_URL = 'meridian.html';
+</script>
+<script src="sandbox-core.js"></script>
+</body>
+</html>

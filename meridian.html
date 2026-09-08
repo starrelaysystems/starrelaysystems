@@ -27,8 +27,13 @@
   .field label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:6px;}
   .field input, .field select{width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:6px; font-size:13.5px; font-family:inherit;}
   .error{color:var(--hot); font-size:12.5px; margin:-6px 0 12px;}
-  .login-box button{width:100%; background:var(--emerald); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:700; font-size:13.5px; cursor:pointer; margin-top:6px;}
+  .login-box button{width:100%; background:var(--emerald); color:#fff; border:none; padding:11px; border-radius:6px; font-weight:700; font-size:13.5px; cursor:pointer; margin-top:18px;}
   .switch-link{font-size:12px; color:var(--muted); margin-top:16px; text-align:center;}
+  .oauth-divider{display:flex; align-items:center; gap:10px; margin:14px 0; font-size:11.5px; color:var(--muted);}
+  .oauth-divider::before, .oauth-divider::after{content:""; flex:1; height:1px; background:var(--border);}
+  .btn-google{width:100%; background:#fff; color:var(--ink); border:1px solid var(--border); padding:10px; border-radius:6px; font-weight:600; font-size:13.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .btn-google:hover{background:var(--surface-2);}
+  .g-mark{width:18px; height:18px; border-radius:50%; background:#4285F4; color:#fff; font-size:11px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;}
   .switch-link a{color:var(--emerald-dark); cursor:pointer; text-decoration:underline;}
 
   #app{display:none;}
@@ -117,20 +122,30 @@
 
   .pw-wrap{position:relative;}
   .pw-wrap input{padding-right:54px;}
-  .pw-toggle{position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; padding:5px 7px;}
+  .pw-toggle{position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; padding:5px 7px; z-index:2;}
   .pw-toggle:hover{color:var(--ink);}
+  /* Needs to out-specificity ".login-box button" above, or the toggle
+     inherits that button's full-width styling and covers the field. */
+  .pw-wrap .pw-toggle{width:auto; background:none; color:var(--muted); padding:5px 7px; margin-top:0; border-radius:4px;}
+  .pw-wrap .pw-toggle:hover{background:none; color:var(--ink);}
+  /* Suppress browsers' own built-in reveal-password icon so it can't overlap our custom Show/Hide button */
+  input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear{ display:none; }
+  .login-box .brand-logo{display:block; height:34px; margin-bottom:14px;}
 </style>
 </head>
 <body>
 
 <div id="auth-screen">
   <div class="login-box" id="login-panel">
+    <img class="brand-logo" src="assets/logo.png" alt="Star Relay Systems">
     <h1>Meridian</h1>
     <p class="sub">A clear view of every deal, from first contact to close.</p>
     <div class="field"><label>Email</label><input id="login-email" type="text" placeholder="you@business.com"></div>
     <div class="field"><label>Password</label><div class="pw-wrap"><input id="login-password" type="password" placeholder="••••••••"><button type="button" class="pw-toggle" data-target="login-password" aria-label="Show password">Show</button></div></div>
     <div class="error" id="login-error" style="display:none;"></div>
     <button id="login-submit">Log in</button>
+    <div class="oauth-divider"><span>or</span></div>
+    <button type="button" class="btn-google" id="google-signin-btn"><span class="g-mark">G</span> Continue with Google</button>
     <div class="switch-link">New here? <a id="show-signup">Create an account</a></div>
     <div class="switch-link">Forgot your password? <a id="show-forgot">Reset it</a></div>
   </div>
@@ -141,7 +156,7 @@
     <div class="field"><label>Business name (optional)</label><input id="signup-business-name" type="text" placeholder="Leave blank if you were invited"></div>
     <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 14px;">Leave blank to auto-name your new workspace. If a team lead or admin already invited you, sign up with that exact email and you'll join their workspace instead.</p>
     <div class="field"><label>Email</label><input id="signup-email" type="text" placeholder="you@business.com"></div>
-    <div class="field"><label>Password</label><div class="pw-wrap"><input id="signup-password" type="password" placeholder="8+ chars, upper, lower & a number"><button type="button" class="pw-toggle" data-target="signup-password" aria-label="Show password">Show</button></div></div>
+    <div class="field"><label>Password</label><div class="pw-wrap"><input id="signup-password" type="password" placeholder="Choose a password"><button type="button" class="pw-toggle" data-target="signup-password" aria-label="Show password">Show</button></div></div>
     <div class="error" id="signup-error" style="display:none;"></div>
     <button id="signup-submit">Create account</button>
     <div class="switch-link">Already have an account? <a id="show-login">Log in</a></div>
@@ -158,7 +173,10 @@
 
 <div id="app">
   <header>
-    <div class="brand"><h1 id="brand-name-slot">Meridian</h1><p id="brand-tagline-slot"></p></div>
+    <div class="brand" style="display:flex; align-items:center; gap:10px;">
+      <img src="assets/logo.png" alt="Star Relay Systems" style="height:26px;">
+      <div><h1 id="brand-name-slot">Meridian</h1><p id="brand-tagline-slot"></p></div>
+    </div>
     <div class="tabs">
       <button class="tab active" data-view="board">Leads</button>
       <button class="tab" data-view="profile">Profile</button>
